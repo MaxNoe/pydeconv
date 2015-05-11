@@ -1,7 +1,6 @@
 import numpy as np
 
-from scipy.interpolate import splev
-from scipy.integrate import quad
+from scipy.interpolate import splev, splint
 from scipy.optimize import minimize
 
 class Blobel():
@@ -78,8 +77,6 @@ class Blobel():
         self.minimize_result_ = result
         self.spline_coefficients_ = result.x
 
-        unfolded = np.empty(self.n_bins_true)
-
         edges = np.linspace(self.range_true[0],
                             self.range_true[1],
                             self.n_bins_true + 1,
@@ -89,7 +86,8 @@ class Blobel():
             return self.splinefunction(x, self.spline_coefficients_)
         self.result_spline_ = result_spline_
 
+        unfolded = np.empty(self.n_bins_true)
         for i, (a, b) in enumerate(zip(edges[:-1], edges[1:])):
-            unfolded[i], _ = quad(result_spline_, a, b)
+            unfolded[i] = splint(a, b, (self.knots, self.spline_coefficients_, self.spline_degree))
 
         return unfolded

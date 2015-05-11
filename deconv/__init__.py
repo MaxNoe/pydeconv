@@ -3,6 +3,7 @@ import numpy as np
 from scipy.interpolate import splev, splint
 from scipy.optimize import minimize
 
+
 class Blobel():
 
     def __init__(
@@ -21,7 +22,11 @@ class Blobel():
         self.spline_degree = 4
 
         self.knots = np.linspace(range_true[0], range_true[1], n_knots)
-        self.knots = np.concatenate([np.ones(self.spline_degree)*range_true[0], self.knots, np.ones(self.spline_degree) * range_true[1]])
+        self.knots = np.concatenate([
+            np.ones(self.spline_degree)*range_true[0],
+            self.knots,
+            np.ones(self.spline_degree) * range_true[1]
+        ])
 
         self.n_knots = len(self.knots) - self.spline_degree - 1
 
@@ -35,7 +40,6 @@ class Blobel():
         coefficients[j] = 1
         return self.splinefunction(x, coefficients)
 
-
     def fit(self, measured, true):
 
         response_matrix = np.empty((self.n_bins_measured, self.n_knots))
@@ -47,17 +51,15 @@ class Blobel():
                                           weights=self.singlespline(true, j),
                                           )
             binwidth = edges[1] - edges[0]
-            response_matrix[:, j] = entries
+            response_matrix[:, j] = entries * binwidth
 
-        self.response_matrix_ = response_matrix / response_matrix.sum(axis=1)[:, None] * binwidth
-
+        self.response_matrix_ = response_matrix / response_matrix.sum(axis=1)[:, None]
 
     def negLnL(self, params, x):
         if np.any(params < 0):
             return np.inf
         lambd = np.dot(self.response_matrix_, params)
         return np.sum(lambd - self.entries_ * np.log(lambd))
-
 
     def predict(self, measured, **kwargs):
 
@@ -66,7 +68,6 @@ class Blobel():
             self.n_bins_measured,
             self.range_measured,
         )
-
 
         result = minimize(self.negLnL,
                           args=(self.entries_),
@@ -89,6 +90,9 @@ class Blobel():
 
         unfolded = np.empty(self.n_bins_true)
         for i, (a, b) in enumerate(zip(edges[:-1], edges[1:])):
-            unfolded[i] = splint(a, b, (self.knots, self.spline_coefficients_, self.spline_degree))
+            unfolded[i] = splint(
+              a, b,
+              (self.knots, self.spline_coefficients_, self.spline_degree)
+            )
 
         return unfolded

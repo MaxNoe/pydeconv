@@ -23,6 +23,9 @@ class Blobel():
         self.n_knots = n_knots
 
         self.knots = np.linspace(range_true[0], range_true[1], n_knots)
+        self.knots = np.concatenate([np.ones(3)*range_true[0], self.knots, np.ones(3) * range_true[1]])
+
+        self.n_knots = len(self.knots) - 4
 
         def splinefunction(x, coefficients):
             return splev(x, (self.knots, coefficients, 3))
@@ -40,17 +43,14 @@ class Blobel():
         response_matrix = np.empty((self.bins_measured, self.n_knots))
 
         for j in range(self.n_knots):
-            print(self.bins_measured)
             entries, _ = np.histogram(measured,
                                       self.bins_measured,
                                       self.range_measured,
                                       weights=self.singlespline(true, j),
                                       )
-            response_matrix[:, j] = entries / entries.sum()
+            response_matrix[:, j] = entries
 
-        print(response_matrix.shape)
-
-        self.response_matrix_ = response_matrix
+        self.response_matrix_ = response_matrix / response_matrix.sum(axis=1)[:, None]
 
     def predict(self, measured, **kwargs):
 
@@ -61,9 +61,11 @@ class Blobel():
         )
 
         def negLnL(params, x):
+            if np.any(params < 0):
+                return np.inf
             lambd = np.dot(self.response_matrix_, params)
-            print(lambd.shape, self.entries_.shape, self.bins_measured)
             return np.sum(lambd - self.entries_ * np.log(lambd))
+
 
         self._negLnL = negLnL
 

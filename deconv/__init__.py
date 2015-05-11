@@ -41,14 +41,23 @@ class Blobel():
         response_matrix = np.empty((self.n_bins_measured, self.n_knots))
 
         for j in range(self.n_knots):
-            entries, _ = np.histogram(measured,
-                                      self.n_bins_measured,
-                                      self.range_measured,
-                                      weights=self.singlespline(true, j),
-                                      )
+            entries, edges = np.histogram(measured,
+                                          self.n_bins_measured,
+                                          self.range_measured,
+                                          weights=self.singlespline(true, j),
+                                          )
+            binwidth = edges[1] - edges[0]
             response_matrix[:, j] = entries
 
         self.response_matrix_ = response_matrix / response_matrix.sum(axis=1)[:, None]
+
+
+    def negLnL(self, params, x):
+        if np.any(params < 0):
+            return np.inf
+        lambd = np.dot(self.response_matrix_, params)
+        return np.sum(lambd - self.entries_ * np.log(lambd))
+
 
     def predict(self, measured, **kwargs):
 
@@ -58,16 +67,8 @@ class Blobel():
             self.range_measured,
         )
 
-        def negLnL(params, x):
-            if np.any(params < 0):
-                return np.inf
-            lambd = np.dot(self.response_matrix_, params)
-            return np.sum(lambd - self.entries_ * np.log(lambd))
 
-
-        self._negLnL = negLnL
-
-        result = minimize(negLnL,
+        result = minimize(self.negLnL,
                           args=(self.entries_),
                           x0=np.ones(self.n_knots),
                           method='Powell',
@@ -82,9 +83,9 @@ class Blobel():
                             self.n_bins_true + 1,
                             )
 
-        def result_spline_(x):
+        def result_spline(x):
             return self.splinefunction(x, self.spline_coefficients_)
-        self.result_spline_ = result_spline_
+        self.result_spline_ = result_spline
 
         unfolded = np.empty(self.n_bins_true)
         for i, (a, b) in enumerate(zip(edges[:-1], edges[1:])):

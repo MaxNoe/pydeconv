@@ -16,10 +16,10 @@ if __name__ == '__main__':
 
     truee = Blobel(
         n_bins_measured=40,
-        n_bins_true=10,
+        n_bins_true=20,
         range_measured=[0, 4],
         range_true=[0, 4],
-        n_knots=5,
+        n_knots=10,
     )
 
     truee.fit(data, data)

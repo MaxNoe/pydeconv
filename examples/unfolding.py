@@ -5,7 +5,7 @@ from scipy.interpolate import splev
 from scipy.integrate import quad
 from scipy.optimize import minimize
 
-from ../deconv import Blobel
+from deconv import Blobel
 
 
 

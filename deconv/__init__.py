@@ -49,7 +49,7 @@ class Blobel():
             binwidth = edges[1] - edges[0]
             response_matrix[:, j] = entries
 
-        self.response_matrix_ = response_matrix / response_matrix.sum(axis=1)[:, None]
+        self.response_matrix_ = response_matrix / response_matrix.sum(axis=1)[:, None] * binwidth
 
 
     def negLnL(self, params, x):

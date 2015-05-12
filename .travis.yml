@@ -19,10 +19,6 @@ install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy 
   - python setup.py install
  
-# Setup anaconda
-install:
-  - pip install .
- 
 # Run test
 script:
   - nosetests  --logging-level=INFO

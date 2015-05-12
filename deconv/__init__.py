@@ -1,6 +1,7 @@
 import numpy as np
 
 from scipy.interpolate import splev, splint
+from scipy.integrate import quad
 from scipy.optimize import minimize
 
 
@@ -12,39 +13,38 @@ class Blobel():
         n_bins_target,
         range_observed,
         range_target,
-        n_knots,
+        n_inner_knots,
     ):
         self.n_bins_observed = n_bins_observed
         self.n_bins_target = n_bins_target
         self.range_observed = range_observed
         self.range_target = range_target
-        self.n_knots = n_knots
         self.spline_degree = 4
+        self.n_knots = n_inner_knots + 2 * self.spline_degree
 
-        knot_distance = (range_target[1] - range_target[0]) / n_knots
-        self.knots = np.arange(
-            range_target[0] - self.spline_degree * knot_distance,
-            range_target[1] + self.spline_degree * 1.1*knot_distance,
-            knot_distance,
-        )
+        self.n_splines = self.n_knots - self.spline_degree
 
-        self.n_knots = len(self.knots) - self.spline_degree - 1
+        dist = np.diff(range_target) / (n_inner_knots - 1)
+        self.knots = np.linspace(range_target[0] - self.spline_degree * dist,
+                                 range_target[1] + self.spline_degree * dist,
+                                 self.n_knots)
 
-        def splinefunction(x, coefficients):
-            return splev(x, (self.knots, coefficients, self.spline_degree))
 
-        self.splinefunction = splinefunction
+    def splinefunction(self, x, coefficients):
+        assert self.n_splines == len(coefficients)
+        return splev(x, (self.knots, coefficients, self.spline_degree), ext=1)
 
     def singlespline(self, x, j):
-        coefficients = np.zeros(self.n_knots)
+        assert j < self.n_splines
+        coefficients = np.zeros(self.n_splines)
         coefficients[j] = 1
         return self.splinefunction(x, coefficients)
 
     def fit(self, observed, target):
 
-        response_matrix = np.empty((self.n_bins_observed, self.n_knots))
+        response_matrix = np.empty((self.n_bins_observed, self.n_splines))
 
-        for j in range(self.n_knots):
+        for j in range(self.n_splines):
             entries, edges = np.histogram(observed,
                                           self.n_bins_observed,
                                           self.range_observed,
@@ -74,7 +74,7 @@ class Blobel():
 
         result = minimize(self.negLnL,
                           args=(self.entries_),
-                          x0=np.ones(self.n_knots),
+                          x0=np.ones(self.n_splines),
                           method='Powell',
                           **kwargs
                           )
@@ -93,9 +93,9 @@ class Blobel():
 
         unfolded = np.empty(self.n_bins_target)
         for i, (a, b) in enumerate(zip(edges[:-1], edges[1:])):
-            unfolded[i] = splint(
-              a, b,
-              (self.knots, self.spline_coefficients_, self.spline_degree)
+            unfolded[i], _ = quad(
+                self.result_spline_,
+                a, b,
             )
 
         return unfolded

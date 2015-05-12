@@ -8,16 +8,16 @@ class Blobel():
 
     def __init__(
         self,
-        n_bins_measured,
-        n_bins_true,
-        range_measured,
-        range_true,
+        n_bins_observed,
+        n_bins_target,
+        range_observed,
+        range_target,
         n_knots,
     ):
-        self.n_bins_measured = n_bins_measured
-        self.n_bins_true = n_bins_true
-        self.range_measured = range_measured
-        self.range_true = range_true
+        self.n_bins_observed = n_bins_observed
+        self.n_bins_target = n_bins_target
+        self.range_observed = range_observed
+        self.range_target = range_target
         self.n_knots = n_knots
         self.spline_degree = 4
 
@@ -40,15 +40,15 @@ class Blobel():
         coefficients[j] = 1
         return self.splinefunction(x, coefficients)
 
-    def fit(self, measured, true):
+    def fit(self, observed, target):
 
-        response_matrix = np.empty((self.n_bins_measured, self.n_knots))
+        response_matrix = np.empty((self.n_bins_observed, self.n_knots))
 
         for j in range(self.n_knots):
-            entries, edges = np.histogram(measured,
-                                          self.n_bins_measured,
-                                          self.range_measured,
-                                          weights=self.singlespline(true, j),
+            entries, edges = np.histogram(observed,
+                                          self.n_bins_observed,
+                                          self.range_observed,
+                                          weights=self.singlespline(target, j),
                                           )
             binwidth = edges[1] - edges[0]
             response_matrix[:, j] = entries * binwidth
@@ -61,12 +61,13 @@ class Blobel():
         lambd = np.dot(self.response_matrix_, params)
         return np.sum(lambd - self.entries_ * np.log(lambd))
 
-    def predict(self, measured, **kwargs):
+    @timecall
+    def predict(self, observed, **kwargs):
 
         self.entries_, edges = np.histogram(
-            measured,
-            self.n_bins_measured,
-            self.range_measured,
+            observed,
+            self.n_bins_observed,
+            self.range_observed,
         )
 
         result = minimize(self.negLnL,
@@ -79,16 +80,16 @@ class Blobel():
         self.minimize_result_ = result
         self.spline_coefficients_ = result.x
 
-        edges = np.linspace(self.range_true[0],
-                            self.range_true[1],
-                            self.n_bins_true + 1,
+        edges = np.linspace(self.range_target[0],
+                            self.range_target[1],
+                            self.n_bins_target + 1,
                             )
 
         def result_spline(x):
             return self.splinefunction(x, self.spline_coefficients_)
         self.result_spline_ = result_spline
 
-        unfolded = np.empty(self.n_bins_true)
+        unfolded = np.empty(self.n_bins_target)
         for i, (a, b) in enumerate(zip(edges[:-1], edges[1:])):
             unfolded[i] = splint(
               a, b,

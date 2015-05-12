@@ -14,7 +14,7 @@ before_install:
   # The next couple lines fix a crash with multiprocessing on Travis and are not specific to using Miniconda
   - sudo rm -rf /dev/shm
   - sudo ln -s /run/shm /dev/shm
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy 
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy nose
 # Install packages
 install:
   - which python

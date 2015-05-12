@@ -51,9 +51,12 @@ class Blobel():
                                           weights=self.singlespline(target, j),
                                           )
             binwidth = edges[1] - edges[0]
-            response_matrix[:, j] = entries * binwidth
+            response_matrix[:, j] = entries
 
-        self.response_matrix_ = response_matrix / response_matrix.sum(axis=1)[:, None]
+        response_matrix /= np.reshape(response_matrix.sum(axis=1), (1, -1)).T
+        response_matrix *= binwidth
+
+        self.response_matrix_ = response_matrix
 
     def negLnL(self, params, x):
         if np.any(params < 0):

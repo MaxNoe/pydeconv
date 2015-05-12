@@ -1,0 +1,14 @@
+language: python
+python:
+  - 2.7
+  - 3.4
+notifications:
+  email: true
+ 
+# Setup anaconda
+install:
+  - pip install .
+ 
+# Run test
+script:
+  - nosetests  --logging-level=INFO

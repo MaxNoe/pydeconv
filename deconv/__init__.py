@@ -64,7 +64,6 @@ class Blobel():
         lambd = np.dot(self.response_matrix_, params)
         return np.sum(lambd - self.entries_ * np.log(lambd))
 
-    @timecall
     def predict(self, observed, **kwargs):
 
         self.entries_, edges = np.histogram(

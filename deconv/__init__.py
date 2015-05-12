@@ -21,12 +21,12 @@ class Blobel():
         self.n_knots = n_knots
         self.spline_degree = 4
 
-        self.knots = np.linspace(range_true[0], range_true[1], n_knots)
-        self.knots = np.concatenate([
-            np.ones(self.spline_degree)*range_true[0],
-            self.knots,
-            np.ones(self.spline_degree) * range_true[1]
-        ])
+        knot_distance = (range_target[1] - range_target[0]) / n_knots
+        self.knots = np.arange(
+            range_target[0] - self.spline_degree * knot_distance,
+            range_target[1] + self.spline_degree * 1.1*knot_distance,
+            knot_distance,
+        )
 
         self.n_knots = len(self.knots) - self.spline_degree - 1
 

@@ -12,14 +12,14 @@ from deconv import Blobel
 if __name__ == '__main__':
 
     # data = np.random.exponential(1, 100000)
-    data = np.random.uniform(0, 4, int(1e7))
+    data = np.random.uniform(0, 4, int(1e6))
 
     truee = Blobel(
         n_bins_observed=40,
         n_bins_target=20,
         range_observed=[0, 4],
         range_target=[0, 4],
-        n_knots=10,
+        n_inner_knots=10,
     )
     truee.fit(data, data)
 
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     data /= bin_width
     unfolded /= bin_width
 
-    px = np.linspace(0, 4, 1000)
+    px = np.linspace(-1, 5, 1000)
 
     for i, coeff in enumerate(truee.spline_coefficients_):
         plt.plot(px, truee.singlespline(px, i) * coeff)

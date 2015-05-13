@@ -4,6 +4,8 @@ from scipy.interpolate import splev, splint
 from scipy.integrate import quad
 from scipy.optimize import minimize
 
+from functools import partial
+
 
 class Blobel():
 
@@ -81,14 +83,9 @@ class Blobel():
         self.minimize_result_ = result
         self.spline_coefficients_ = result.x
 
-        edges = np.linspace(self.range_target[0],
-                            self.range_target[1],
-                            self.n_bins_target + 1,
-                            )
-
-        def result_spline(x):
-            return self.splinefunction(x, self.spline_coefficients_)
-        self.result_spline_ = result_spline
+        self.result_spline_ = partial(self.splinefunction,
+                                      coefficients=self.spline_coefficients_,
+                                      )
 
         unfolded = np.empty(self.n_bins_target)
         for i, (a, b) in enumerate(zip(edges[:-1], edges[1:])):

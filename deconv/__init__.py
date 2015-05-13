@@ -19,16 +19,15 @@ class Blobel():
         self.n_bins_target = n_bins_target
         self.range_observed = range_observed
         self.range_target = range_target
-        self.spline_degree = 4
+        self.spline_degree = 3
         self.n_knots = n_inner_knots + 2 * self.spline_degree
 
-        self.n_splines = self.n_knots - self.spline_degree
+        self.n_splines = self.n_knots - self.spline_degree - 1
 
-        dist = np.diff(range_target) / (n_inner_knots - 1)
+        dist = (range_target[1] - range_target[0]) / (n_inner_knots - 1)
         self.knots = np.linspace(range_target[0] - self.spline_degree * dist,
                                  range_target[1] + self.spline_degree * dist,
                                  self.n_knots)
-
 
     def splinefunction(self, x, coefficients):
         assert self.n_splines == len(coefficients)

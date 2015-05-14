@@ -1,43 +1,59 @@
 import numpy as np
-import scipy.interpolate as si
-
+from scipy.interpolate import splev
 import matplotlib.pyplot as plt
-plt.style.use('ggplot')
+from matplotlib.style import use
+use('ggplot')
+plt.rcParams['font.size'] = 14
 
-N = 20
+def b_spline(x, knots, degree, idx):
+    coeffs = np.zeros(len(knots) - degree - 1)
+    coeffs[idx] = 1
+    return splev(x, (knots, coeffs, degree), ext=1)
+
+natural_domain = [0, 1]
 degree = 3
+n_inner_knots = 10
 
-# create some sample data and plot it
-x = np.linspace(0, 2*np.pi, N)
-y = np.sin(x) + np.random.normal(0, 0.1, N)
-plt.plot(x, y, "rx", label="Sampled Data")
+knots = np.arange(n_inner_knots + 2 * degree)
+knots = knots / (np.diff(natural_domain)[0] * (n_inner_knots - 1))
+knots -= natural_domain[0] + degree * np.diff(natural_domain) / (n_inner_knots - 1)
 
-# define knots and fit a spline to the data
-n_internal_knots = 8
-internal_knots = np.linspace(0, 2*np.pi, n_internal_knots + 2)[1:-1]
-tck = si.splrep(x, y, t=internal_knots, k=degree)
+coefficients = np.ones(len(knots) - degree - 1)
 
+x = np.linspace(-0.2, 1.2, 1000)
 
-# plot the new spline as well
-px = np.linspace(0, 2*np.pi, 1000)
-plt.plot(px, si.splev(px, tck=tck), "b-", label="Spline fitted to sample data")
-plt.plot(px, np.sin(px), "--", color="black")
-
-# now plot b-spline basis functions and save them in a list
-knots, coefficients, degree = tck
-basis_functions = []
+plt.figure()
+plt.title('equidistant knots around inner knots')
 for i in range(len(coefficients)):
-    basis_coeffs = np.zeros_like(coefficients)
-    basis_coeffs[i] = coefficients[i]
-    basis_functions.append(si.splev(px, (knots, basis_coeffs, degree)))
-    plt.plot(px, si.splev(px, (knots, basis_coeffs, degree)), color="0.7")
-
-basis_functions = np.array(basis_functions)
-plt.plot(px, basis_functions.sum(axis=0), color="orange", linestyle='dashed',  label="Sum of basis functions")
-
-plt.ylim([-1.5, 1.5])
+    plt.plot(x, b_spline(x, knots, degree, i))
+plt.plot(x, splev(x, (knots, coefficients, degree), ext=1), 'k', lw=1.5, label='sum')
 plt.legend()
-plt.title("Visualization of splines")
+
+plt.plot(knots, np.zeros_like(knots), 'ro', mew=0, alpha=0.3)
+plt.ylim(-0.05, 1.1)
+plt.xlabel('$x$')
+plt.ylabel('$y$')
+plt.tight_layout()
+
+inner_knots = np.linspace(natural_domain[0], natural_domain[1], n_inner_knots)
+knots = np.empty(n_inner_knots + 2*degree)
+knots[degree:-degree] = inner_knots
+knots[:degree] = inner_knots[0]
+knots[-degree:] = inner_knots[-1]
+
+plt.figure()
+plt.title('repeat outer inner knots degree times')
+for i in range(len(coefficients)):
+    plt.plot(x, b_spline(x, knots, degree, i))
+plt.plot(x, splev(x, (knots, coefficients, degree), ext=1), 'k', lw=1.5, label='sum')
+plt.legend()
+
+y_knots = np.zeros_like(knots)
+y_knots[:degree] = -np.arange(1, degree + 1) * 0.02
+y_knots[-degree:] = -np.arange(1, degree + 1) * 0.02
+plt.plot(knots, y_knots, 'ro', mew=0, alpha=0.3)
+plt.ylim(-0.1, 1.1)
+plt.xlabel('$x$')
+plt.ylabel('$y$')
+plt.tight_layout()
 plt.show()
-
-

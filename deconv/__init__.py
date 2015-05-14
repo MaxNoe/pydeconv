@@ -87,6 +87,9 @@ class Blobel():
                                       coefficients=self.spline_coefficients_,
                                       )
 
+        edges = np.linspace(self.range_target[0],
+                            self.range_target[1],
+                            self.n_bins_target+1)
         unfolded = np.empty(self.n_bins_target)
         for i, (a, b) in enumerate(zip(edges[:-1], edges[1:])):
             unfolded[i], _ = quad(

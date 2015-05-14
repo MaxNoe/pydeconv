@@ -40,6 +40,11 @@ def main():
     # r = np.linspace(0, 2, 20, endpoint=True)
     # plt.plot((r[0:-1] + r[1:])*0.5, result_points[:-1], 'bo',  label="resulting points")
     plt.legend()
+    # plt.savefig('fit.png')
+
+    plt.matshow(blobel.response_matrix_)
+    plt.colorbar()
+    # plt.savefig('mat.png')
     plt.show()
 
 

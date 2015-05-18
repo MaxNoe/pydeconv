@@ -1,7 +1,7 @@
 __author__ = 'kai'
 
 import matplotlib.pyplot as plt
-plt.style.use('ggplot')
+# plt.style.use('ggplot')
 
 import numpy as np
 
@@ -14,10 +14,13 @@ def main():
 
 
     mc_feature, mc_target = double_gauss(1000000)
-    measured_data_y, _ = double_gauss(1000000, smearing_sigma=0.05)
+
+    measured_data_y, _ = double_gauss(1000000, smearing_sigma=0.01)
+
 
     # mc_feature, mc_target = blobel_example(1000000, detector_eff=lambda x: x)
     # measured_data_y, _ = blobel_example(1000000, detector_eff=lambda x: x)
+
 
 
     value_range = [0, 2]
@@ -58,6 +61,7 @@ def main():
     # # r = np.linspace(0, 2, 20, endpoint=True)
     # # plt.plot((r[0:-1] + r[1:])*0.5, result_points[:-1], 'bo',  label="resulting points")
     plt.ylim([-3, 3])
+
     plt.legend()
     # plt.savefig('fit.png')
 

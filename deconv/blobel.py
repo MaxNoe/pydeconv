@@ -20,13 +20,13 @@ class BlobelUnfold():
         self.range_target = range_target
         self.n_knots = n_knots
         self.spline_degree = 3
+
         self.response_matrix_ = None
-        self.fit_spline_ = None
 
         knot_distance = (range_target[1] - range_target[0]) / n_knots
 
         self.knots = np.linspace(range_target[0], range_target[1], num=n_knots)
-        #
+
         # self.knots = np.concatenate([[range_target[0]]*3,
         #                             np.linspace(range_target[0], range_target[1], n_internal_knots + 1),
         #                             [range_target[1]]*3])
@@ -46,27 +46,10 @@ class BlobelUnfold():
 
     def fit(self, mc_feature, mc_target):
 
-        # mc_target_hist, edges = np.histogram(mc_target, bins=self.n_bins_target, range=self.range_target)
-        # bin_center = (edges[0:-1] + edges[1:])*0.5
-        # spl = si.LSQUnivariateSpline(bin_center, mc_target_hist, t=self.knots[4:-4], k=self.spline_degree)
-        # self.fit_spline_ = spl
-        #
-        # mc_feature_hist, edges = np.histogram(mc_feature, bins=self.n_bins_observed, range=self.range_observed)
-        # bin_center = (edges[0:-1] + edges[1:])*0.5
-        # spl = si.LSQUnivariateSpline(bin_center, mc_feature_hist, t=self.knots[4:-4], k=self.spline_degree)
-        # self.start_values_ = spl.get_coeffs()
-
-        # # now fit a spline to it
-        # degree = self.spline_degree
-        #
-        # # spl = InterpolatedUnivariateSpline(bin_center, truth_histogram, k=degree)
-        # n_internal_knots = self.n_internal_knots
-        #
-        # # internal_knots = np.linspace(self.range_target[0], self.range_target[1], n_internal_knots + 2)[1:-1]
-
         # fit the matrix
         columns = len(self.knots)
         A = np.zeros([self.n_bins_observed, columns])
+        # h, _ = np.histogram(mc_feature, bins=self.n_bins_observed, range=self.range_observed, density=True)
         for j in range(columns):
             weights = self._spline_basis_function(mc_target, j)
             h, _ = np.histogram(mc_feature, bins=self.n_bins_observed, range=self.range_observed, weights=weights)
@@ -83,6 +66,7 @@ class BlobelUnfold():
 
         x0 = np.ones_like(self.response_matrix_[0])
         result = minimize(self._negLnL, x0=x0, args=measured_data_histogram_y)
+
 
 
         self.predict_tck_ = (self.knots, result.x, self.spline_degree)
